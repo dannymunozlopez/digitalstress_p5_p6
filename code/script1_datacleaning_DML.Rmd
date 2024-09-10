@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-#Load Packages #practice commit signed out of github online.
+#Load Packages
 ```{r}
 #Load in packages that will be used throughout the markdown.
 packages <- c("tidyverse", 
