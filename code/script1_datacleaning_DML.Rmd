@@ -2,7 +2,9 @@
 title: "Data Cleaning of Peru 5 and Peru 6 Data"
 author: "Daniela Munoz Lopez"
 date: "2024-07-25"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
