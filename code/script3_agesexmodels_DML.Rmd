@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #clear environment (RUN EACH TIME SCRIPT IS OPENED)
-rm(list = ls())
+rm(list = ls()) 
 ```
 
 #Load Packages
