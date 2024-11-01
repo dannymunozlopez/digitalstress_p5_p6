@@ -1,5 +1,5 @@
 ---
-title: "Data Cleaning of Peru 5 and Peru 6 Data"
+title: "Data Cleaning of Peru 5 and Peru 6 Data with preprocessed data"
 author: "Daniela Munoz Lopez"
 date: "2024-07-25"
 output:
@@ -7,27 +7,32 @@ output:
   html_document: default
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#clear environment (RUN EACH TIME SCRIPT IS OPENED)
+rm(list = ls())
 ```
 
 #Load Packages
 ```{r}
 #Load in packages that will be used throughout the markdown.
-packages <- c("tidyverse", 
-              "summarytools",
-              "psych",
-              #"reader",
-              "tidyr",
-              "lme4",
-              "lmerTest",
-              "jtools",
-              "interactions",
-              "rio",
-              "ggplot2",
-              "dplyr",
-              "here")
-
+packages <- c("tidyverse",
+                "summarytools",
+                "psych",
+                "reader",
+                "tidyr",
+                "lme4",
+                "lmerTest",
+                "jtools",
+                "interactions",
+                "rio",
+                "ggplot2",
+                "dplyr",
+                "here")
 #invisible(lapply(packages, install.packages, character.only = TRUE)) #install packages (only run once)
 invisible(lapply(packages, library, character.only = TRUE)) #load the packages
 ```
@@ -37,133 +42,885 @@ invisible(lapply(packages, library, character.only = TRUE)) #load the packages
 #load Peru data.
 data_dir = dirname(dirname(here())) #Move out of "digitalstress_p5_p6" folder to the "Peru May 2019" folder
 
-wave_folder <- "peru6" #Name of wave folder containing all Peru 6 data.
+wave_folder <- "peru6" #Name of the wave folder containing all Peru 6 data.
 
-data_folder <- file.path(data_dir, "Waves", wave_folder, "projects", 
-                         "data_prep", "data", "derivatives" ) #Path to the data within the wave_folder. Items in "" indicate the name of the folders within the data_dir & wave_folder.
+data_folder <- file.path(data_dir, "Waves", wave_folder, "projects",
+                         "data_prep", "data", "derivatives") #Path to the data within the wave_folder
 
-file_name <- "Peru3_Peru4_Peru5_Peru6_all_withID_CLEAN_NO_IDENTIFIERS_ES_12.16.21.csv" #Name of the CSV containing the data. #USE CLEAN NO IDENTIFIERS
+file_name <- "peru56_DSS_PROMIS_(PSS)_RT_2023Jan25.csv" #Name of the CSV containing the data that was pre-processed by RT
 
-peru6 <- read.csv(here(data_folder,file_name), header = T, sep = ",", na.strings=c(""," ","NA")) #Load in the CSV using the file paths that were established above. 
+peru6 <- read.csv(here(data_folder,file_name), header = T, sep = ",", na.strings=c("", " ","NA")) #Load data
 
-as_tibble(peru6) #Convert the data frame into a tibble with class tbl_df. 
+as_tibble(peru6) #Convert the data frame into a tibble with class tbl_df
 
 #Select only the data collected during Peru 5 and Peru 6
-peru5_6 <- peru6 %>% 
-  filter(wave == 'Peru 5' | wave == 'Peru 6') 
+peru5_6 <- peru6 %>%
+  filter(wave== 'Peru 5' | wave == 'Peru 6')
 
-nrow(peru5_6) #Count rows of Peru 5 and Peru 6. N = 36,480
+nrow(peru5_6) #Count rows of Peru 5 and Peru 6. N = 1,564
 
 #check data
 head(peru5_6, 20)
 tail(peru5_6, 20)
 ```
 
-#Filter Data
+#Filter & Preprocess Data
+##Select relevant data
 ```{r}
 #Select project specific columns
-#NOTE: DSS items 6 and 18 were removed after initial Factor Analysis done by C.G.
-peru5_6_relevant <- peru5_6 %>% 
-  select(Peru3_4_5_6_ID, wave_ID, wave, session, exclude, group, 
-         gender, birthmth, birthyr, 
-         grade_2021, startdate_formatted, 
-         promis_dep1:promis_dep8, promis_anx1:promis_anx4,
-         dss1, dss2, dss3, dss4, dss5, dss7, dss8, dss9, dss10, 
-         dss11, dss12, dss13, dss14, dss15, dss16, dss17,
-         dss19, dss20)
+peru5_6_relevant <- peru5_6 %>%
+  select(Peru3_4_5_6_ID, wave_ID, wave, session, exclude, group,
+          gender, birthmth, birthyr, age_selfreport,
+          grade_2021, startdate_formatted, duplicate,
+          promis_dep1:promis_dep8, promis_anx1:promis_anx4,
+          dss1, dss2, dss3, dss4, dss5, dss6, dss7, dss8, dss9, dss10,
+          dss11, dss12, dss13, dss14, dss15, dss16, dss17, dss18,
+          dss19, dss20)
 
-nrow(peru5_6_relevant) # N = 36480 after selecting project specific rows
+nrow(peru5_6_relevant) # N = 1564 after selecting project specific rows
 
 #Remove rows that met initial exclusion criteria (i.e., pilot trials).
-peru5_6_exclusion <- peru5_6_relevant %>% 
-  filter(exclude == 'no')
+peru5_6_exclusion <- peru5_6_relevant %>%
+  filter(exclude== 'no')
 
-nrow(peru5_6_exclusion) # N = 36480 after selecting project specific rows
+nrow(peru5_6_exclusion) # N = 1564 after selecting project specific rows
 
 #Select relevant groups (based on those who completed all variables of interest)
 peru5_6_group <- peru5_6_exclusion %>%
-  filter(group == "Group3")
+  filter(group== "Group3")
 
-nrow(peru5_6_group) # N = 11,378 after selecting project specific groups (Group 3)
+nrow(peru5_6_group) # N = 1055 after selecting project specific groups (Group 3)
 
 #Select relevant sessions (based on those who completed all variables of interest)
-peru5_6_group_session  <- peru5_6_group %>%
-  filter(session == "survey1_6a11" | session == "survey3_6a11")
+peru5_6_group_session <- peru5_6_group %>%
+  filter(session== "survey1_6a11" | session== "survey3_6a11")
 
-nrow(peru5_6_group_session) # N = 6,450 after selecting project specific groups AND sessions (sessions 1 and 3)
+nrow(peru5_6_group_session) # N = 1055 after selecting project specific groups AND sessions (sessions 1 & 3)
 ```
 
-#Relabel items (using dss1_V2 project as reference)
+##Check demographics type
 ```{r}
-#Relabel DSS
-peru5_6_relabel<- peru5_6_group_session %>% 
-      dplyr::mutate_at(c("dss1", "dss2", "dss3", "dss4",
-                         "dss5", "dss7", "dss8", "dss9", "dss10", "dss11", 
-                         "dss12" , "dss13", "dss14", "dss15", "dss16", "dss17", "dss19", "dss20"), 
-                (~dplyr::recode(., "Nunca"='1',
-                              "Casi Nunca"='2',
-                              "Ocasionalmente" ='3',
-                              "Ocasionalemente" ='3', #typo in Qualtrics spelling 
-                              "Casi Siempre" ='4',
-                              "Siempre" ='5' )))
-
-#Relabel PROMIS ANX
-peru5_6_relabel <- peru5_6_relabel %>%
-    (dplyr::mutate_at(promis_anx1:promis_anx4),
-     dplyr::recode(., ))
-
-
-peru5_6_relabel$promis_anx
-
-
-#Relabel PPROMIS DEP
-
-
+#Check
+typeof(peru5_6_group_session$gender) #currently a character -- change to factor
+typeof(peru5_6_group_session$grade_2021) #currently an integer -- ok
+typeof(peru5_6_group_session$age_selfreport) #currently a double -- ok
 ```
 
-#Make items numeric
+##Re-code sex
 ```{r}
+#Re-code sex for future analyse
+peru5_6_group_session <- peru5_6_group_session %>%
+  dplyr::mutate_at(c('gender'),
+  funs(dplyr::recode(., "M"='Male', "F"='Female')))
 
+#Make into a factor
+peru5_6_group_session$gender <- as.factor(peru5_6_group_session$gender)
+
+#Check type (should be factor/integer)
+typeof(peru5_6_group_session$gender) #now an integer
 ```
 
-#Score items
-##DSS
+##Confirm age variable & limit ages to greater than 10 and lower than 18 (from chatGPT)
 ```{r}
+#Adapt startdate_formatted format
+peru5_6_group_session$startdate_formatted <- as.Date(peru5_6_group_session$startdate_formatted, format = "%Y-%m-%d")
 
+#Get year and month from the survey start date
+peru5_6_group_session$survey_year <- as.numeric(format(peru5_6_group_session$startdate_formatted, "%Y"))
+peru5_6_group_session$survey_month <- as.numeric(format(peru5_6_group_session$startdate_formatted, "%m"))
+
+#Calculate age at the time the survey was taken
+peru5_6_group_session$age_official_confirm <- with(peru5_6_group_session, {
+  age_years <- survey_year - birthyr
+  # Subtract one year if the survey month is before the birth month
+  age_years - ifelse(survey_month < birthmth, 1, 0)
+})
+
+#Limit ages to greater than 10 and lower than 18
+peru5_6_group_session <- peru5_6_group_session %>%
+  filter(age_official_confirm>10&age_official_confirm<18)
+
+#Check sample size after limiting age
+nrow(peru5_6_group_session) #N = 1053 (dropped 2 participants due to age restrictions)
+
+#Age average and range (round to the nearest tenth)
+mean(peru5_6_group_session$age_official_confirm) #12.9
+range(peru5_6_group_session$age_official_confirm, na.rm = FALSE, finite = FALSE) #11 to 17
 ```
 
-##PMUM Anxiety
+##Make measure items numeric
 ```{r}
+#DSS
+peru5_6_numeric <- peru5_6_group_session %>%
+  mutate_at(vars(dss1:dss20),~as.numeric(as.character(.)))
 
+#PROMIS ANX
+peru5_6_numeric <- peru5_6_numeric %>%
+  mutate_at(vars(promis_anx1:promis_anx4),~as.numeric(as.character(.)))
+
+#PROMIS DEP
+peru5_6_numeric <- peru5_6_numeric %>%
+  mutate_at(vars(promis_dep1:promis_dep8),~as.numeric(as.character(.)))
 ```
 
-##PMUM Depression
+##Match DSS items across Peru 5 and Peru 6 data 
+###Adjust Peru 5
 ```{r}
+#IMPORTANT NOTE: DSS items 1-20 were administered in Peru 5, however items 6 and 18 were removed after initial EFA by CG. 
+#make DF with only Peru 5 data
+p5_only <- peru5_6_numeric[grepl("5_", peru5_6_numeric$wave_ID),]
+
+#Check N
+nrow(p5_only) #N for Peru 5 only = 526
+
+#drop items 6 and 18
+p5_only <- p5_only[, !(names(p5_only) %in% c("dss6", "dss18"))]
+```
+
+###Adjust Peru 6
+```{r}
+#make DF with only Peru 6 data
+p6_only <- peru5_6_numeric[grepl("6_", peru5_6_numeric$wave_ID),]
+
+#Check N
+nrow(p6_only) #N for Peru 6 only = 527
+
+#drop items 19 and 20 since there is no data for this
+p6_only <- p6_only[, !(names(p6_only) %in% c("dss19", "dss20"))]
+
+#Relabel responses to match Peru 5 DSS (no dss 6 or 18) NOTE: ONLY RUN ONCE TO AVOID ERROR.
+p6_only <- p6_only %>%
+              rename("dss7" = "dss6",
+                      "dss8" = "dss7",
+                      "dss9" = "dss8",
+                      "dss10" = "dss9",
+                      "dss11" = "dss10",
+                      "dss12" = "dss11",
+                      "dss13" = "dss12",
+                      "dss14" = "dss13",
+                      "dss15" = "dss14",
+                      "dss16" = "dss15",
+                      "dss17" = "dss16",
+                      "dss19" = "dss17",
+                      "dss20" = "dss18")
+```
+
+###Combine adjusted Peru 5 and Peru 6 dataframes
+```{r}
+#Combine dataframes
+p5_p6_adjusted <- bind_rows(
+  p5_only %>% select(Peru3_4_5_6_ID, wave_ID, wave, session, exclude, group, gender, birthmth, birthyr,
+                     age_selfreport, age_official_confirm, grade_2021, startdate_formatted,
+                     promis_dep1:promis_dep8, promis_anx1:promis_anx4, dss1:dss20),
+  p6_only %>% select(Peru3_4_5_6_ID, wave_ID, wave, session, exclude, group, gender, birthmth, birthyr,
+                     age_selfreport, age_official_confirm, grade_2021, startdate_formatted,
+                     promis_dep1:promis_dep8, promis_anx1:promis_anx4, dss1:dss20))
+
+#Check new dataframe
+head(p5_p6_adjusted)
+
+#Sample size (should be N before splitting sample)
+nrow(p5_p6_adjusted) #N = 1053
+
+#Adjust data to long format
+p5_p6_adjusted <- p5_p6_adjusted %>%
+  arrange(Peru3_4_5_6_ID, group)
+```
+
+#Careless Responses & NAs 
+##Remove careless DSS responses
+```{r}
+#call careless package to remove repeated responses for DSS
+#Note: chunk won't run without the careless library
+library(careless)
+
+#Create a new variable in the DF named careless, which is TRUE if participants have the same value in every column of the measure (DSS only) and FALSE if not to indicate repeated (careless) responses.
+p5_p6_adjusted$careless <- ifelse(apply(p5_p6_adjusted[ ,(which(colnames (p5_p6_adjusted) == "dss1")):(which(colnames(p5_p6_adjusted)=="dss20"))], MARGIN=1, function(x) length(unique(as.numeric(x)))) == 1, TRUE, FALSE)
+
+#For participants who reported the same response on items of the DSS measure, label as "NA." We decided not to exclude participants who reported the same response for each item of a sub-scale at this time because sub-scale items are interspersed throughout the DSS questionnaire.
+p5_p6_adjusted <- p5_p6_adjusted %>% 
+   mutate(
+     dss1 = ifelse(
+                careless == TRUE,
+                          "NA", dss1),
+     dss2 = ifelse(
+                careless == TRUE, 
+                          "NA", dss2),
+     dss3 = ifelse(
+                careless == TRUE, 
+                          "NA", dss3),
+     dss4 = ifelse(
+                careless == TRUE,
+                          "NA", dss4),
+     dss5 = ifelse(
+                careless == TRUE,
+                          "NA", dss5),
+     dss7 = ifelse(
+                careless == TRUE,
+                          "NA", dss7),
+     dss8 = ifelse(
+                careless == TRUE,
+                          "NA", dss8),
+     dss9 = ifelse(
+                careless == TRUE,
+                          "NA", dss9),
+     dss10 = ifelse(
+                careless == TRUE,
+                          "NA", dss10),
+     dss11 = ifelse(
+                careless == TRUE,
+                          "NA", dss11),
+     dss12 = ifelse(
+                careless == TRUE,
+                          "NA", dss12),
+     dss13 = ifelse(
+                careless == TRUE,
+                          "NA", dss13),
+     dss14 = ifelse(
+                careless == TRUE,
+                          "NA", dss14),
+     dss15 = ifelse(
+                careless == TRUE,
+                          "NA", dss15),
+     dss16 = ifelse(
+                careless == TRUE,
+                          "NA", dss16),
+     dss17 = ifelse(
+                careless == TRUE,
+                          "NA", dss17),
+     dss19 = ifelse(
+                careless == TRUE,
+                          "NA", dss19),
+     dss20 = ifelse(
+                careless == TRUE,
+                          "NA", dss20))
+
+#Double check that the measures are still numeric. Previous runs of the code would change the object type, so this step is to make sure that does not happen.
+##Make DSS numeric
+p5_p6_adjusted <- p5_p6_adjusted%>% 
+  mutate_at(vars(dss1:dss20), ~as.numeric(as.character(.)))
+
+##Check
+typeof(p5_p6_adjusted$dss1)
+
+#Table summarizing results from the careless package
+table(p5_p6_adjusted$careless) #Excluded 55 participants who had careless responses 
+
+#Keep participants who did not respond with the same answer repeatedly (i.e., FALSE careless)
+p5_p6_adjusted <- p5_p6_adjusted %>% 
+  filter(careless == FALSE) 
+
+#Check new sample size of DF that doesn't include people who had careless responses.
+nrow(p5_p6_adjusted) #N = 998, dropped 55 participants with careless responses
+```
+
+##Drop NAs
+```{r}
+#Check sample size before dropping NAs
+#Check new sample size
+nrow(p5_p6_adjusted) #N = 998
+
+#Count number of NAs IN ANY MEASURE for each participant
+p5_p6_adjusted_na_count <- p5_p6_adjusted %>%
+  mutate(
+    count_all_na = rowSums(is.na(select(.,one_of(c(
+      'dss1','dss2', 'dss3', 'dss4', 'dss5',
+      'dss7', 'dss8', 'dss9', 'dss10', 'dss11', 'dss12', 
+      'dss13', 'dss14', 'dss15', 'dss16', 'dss17', 'dss19', 'dss20', 
+      'promis_anx1', 'promis_anx2', 'promis_anx3', 'promis_anx4',
+      'promis_dep1', 'promis_dep2', 'promis_dep3', 'promis_dep4','promis_dep5', 'promis_dep6', 'promis_dep7', 'promis_dep8'))))))
+
+#Keep only complete cases with filter. Drop people who had ANY NAs. RATIONALE: Given our large sample size, we are going to keep participants with COMPLETE CASES.
+p5_p6_adjusted_no_na <- p5_p6_adjusted_na_count %>% 
+  filter(count_all_na <= 0) 
+
+#Check new sample size
+nrow(p5_p6_adjusted_no_na) #N = 973, dropped 25 due to NAs
+```
+
+#Score items 
+##DSS Scoring - Mean Score 
+###Availability Stress Score
+```{r}
+p5_p6_availstress_score <- p5_p6_adjusted_no_na %>%
+  mutate(
+    avail_stress=rowMeans(select(., dss1, dss19, dss20))
+)
+
+#Range
+range(p5_p6_availstress_score$avail_stress) #1-5
+
+#Mean
+mean(p5_p6_availstress_score$avail_stress) #2.0531
+
+#SD
+sd(p5_p6_availstress_score$avail_stress) #0.9025638
+```
+
+###Approval Anxiety Score
+```{r}
+p5_p6_appanx_score <- p5_p6_availstress_score %>%
+  mutate(
+    approval_anx=rowMeans(select(., dss3, dss7, dss9, dss10))
+)
+
+#Range
+range(p5_p6_appanx_score$approval_anx) #1-5
+
+#Mean
+mean(p5_p6_appanx_score$approval_anx) #2.032117
+
+#SD
+sd(p5_p6_appanx_score$approval_anx) #1.125912
+```
+
+###FOMO Score
+```{r}
+p5_p6_fomo_score <- p5_p6_appanx_score %>%
+  mutate(
+    fomo=rowMeans(select(., dss4, dss5, dss14, dss15))
+)
+
+#Range
+range(p5_p6_fomo_score$fomo) #1-5
+
+#Mean
+mean(p5_p6_fomo_score$fomo) #1.914954
+
+#SD
+sd(p5_p6_fomo_score$fomo) #0.9263101
+```
+
+###Connection Overload Score
+```{r}
+p5_p6_overload_score <- p5_p6_fomo_score %>%
+  mutate(
+    connect_overload=rowMeans(select(., dss11, dss13, dss16))
+)
+
+#Range
+range(p5_p6_overload_score$connect_overload) #1-5
+
+#Mean
+mean(p5_p6_overload_score$connect_overload) #1.913669
+
+#SD
+sd(p5_p6_overload_score$connect_overload) #0.8583178
+```
+
+###Online vigilance Score
+```{r}
+p5_p6_vigilance_score <- p5_p6_overload_score %>%
+  mutate(
+    online_vigil=rowMeans(select(., dss2, dss8, dss12, dss17))
+)
+
+#Range
+range(p5_p6_vigilance_score$online_vigil) #1-5
+
+#Mean
+mean(p5_p6_vigilance_score$online_vigil) #2.490236
+
+#SD
+sd(p5_p6_vigilance_score$online_vigil) #0.9763311
+```
+
+###Total digital stress score
+```{r}
+p5_p6_alldss_scored <- p5_p6_vigilance_score %>%
+  mutate(
+    dss_total_avg=rowMeans(select(., dss1, dss2, dss3, dss4, dss5, dss7, dss8, dss9, dss10,
+        dss11, dss12, dss13, dss14, dss15, dss16, dss17, dss19, dss20))
+)
+
+#Range
+range(p5_p6_alldss_scored$dss_total_avg) #1.055556 4.833333
+
+#Mean
+mean(p5_p6_alldss_scored$dss_total_avg) #2.091641
+
+#SD
+sd(p5_p6_alldss_scored$dss_total_avg) #0.7585636
+```
+
+##PROMIS Anxiety - Sum Score
+```{r}
+#Sum score
+p5_p6_alldss_promisanx_scored <- p5_p6_alldss_scored %>%
+  mutate(
+    promis_anx_sum=rowSums(select(., promis_anx1:promis_anx4))
+)
+
+#Range
+range(p5_p6_alldss_promisanx_scored$promis_anx_sum) #4-20
+
+#Mean
+mean(p5_p6_alldss_promisanx_scored$promis_anx_sum) #10.86536
+
+#SD
+sd(p5_p6_alldss_promisanx_scored$promis_anx_sum) #3.81347
+```
+#DANNY TO ADADPT
+###T-Score PROMIS Anxiety for 
+
+##PROMIS Depression - Sum Score
+```{r}
+#Sum score
+p5_p6_fully_scored <- p5_p6_alldss_promisanx_scored %>%
+  mutate(
+    promis_dep_sum=rowSums(select(., promis_dep1:promis_dep8))
+)
+
+#Range
+range(p5_p6_fully_scored$promis_dep_sum) #8-40
+
+#Mean
+mean(p5_p6_fully_scored$promis_dep_sum) #20.42549
+
+#SD
+sd(p5_p6_fully_scored$promis_dep_sum) #8.362778
+```
+
+#Cronbach Alpha of measures 
+##Total DSS
+```{r}
+#Make DSS specific data frame
+dss_total <- p5_p6_fully_scored %>%
+  select(dss1, dss2, dss3, dss4, dss5, dss7, dss8, dss9, dss10,
+         dss11, dss12, dss13, dss14, dss15, dss16, dss17, dss19, dss20)
+
+#Check Alpha
+alpha(dss_total) #raw alpha = 0.9292514 = 0.93
+```
+
+##Availability Stress
+```{r}
+#Make DSS - availability stress data frame
+dss_avail_stress <- p5_p6_fully_scored %>%
+  select(dss1, dss19, dss20)
+
+#check alpha
+alpha(dss_avail_stress) #raw alpha = 0.841891 = 0.84
+```
+
+##Approval Anxiety
+```{r}
+#make DSS - approval anxiety specific data frame
+dss_approval_anx <- p5_p6_fully_scored %>%
+  select(dss3, dss7, dss9, dss10)
+
+#check alpha
+alpha(dss_approval_anx) #raw alpha = 0.945593 = 0.95
+```
+
+##FOMO
+```{r}
+#make DSS - FOMO specific data frame
+dss_fomo <- p5_p6_fully_scored %>%
+  select(dss4, dss5, dss14, dss15)
+
+#check alpha
+alpha(dss_fomo) #raw alpha = 0.8731212 = 0.87
+```
+
+##Connection Overload
+```{r}
+#make Connection Overload specific data frame
+dss_connect <- p5_p6_fully_scored %>%
+  select(dss11, dss13, dss16)
+
+#check alpha
+alpha(dss_connect) #raw alpha = 0.7646301 = 0.76
+```
+
+##Online Vigilance
+```{r}
+#make Online Vigilance specific data frame
+dss_online <- p5_p6_fully_scored %>%
+  select(dss2, dss8, dss12, dss17)
+
+#check alpha
+alpha(dss_online) #raw alpha = 0.8340929 = 0.83
+```
+
+##PROMIS Anxiety
+```{r}
+#make PROMIS Anxiety specific data frame
+promis_anx_alpha <- p5_p6_fully_scored %>%
+  select(promis_anx1:promis_anx4)
+
+#check alpha
+alpha(promis_anx_alpha) #raw alpha = 0.7830833 = 0.78
+```
+
+##PROMIS Depression
+```{r}
+#make PROMIS Depression specific data frame
+promis_dep_alpha <- p5_p6_fully_scored %>%
+  select(promis_dep1:promis_dep8)
+
+#check alpha
+alpha(promis_dep_alpha) #raw alpha = 0.940782 = 0.94
+```
+
+#DANNY TO ADAPT
+#Mental Health Rankings
+##PROMIS Anxiety rankings
+```{r}
+#'severe' if  ≥ 13, 'moderate' if ≥ 8, 'mild' if  ≥ 7, 'normal' if ≥ 0
+#From Tobias 
+p5_p6_fully_scored <- p5_p6_fully_scored %>%
+  mutate(
+    promis_anx_ranking=cut(p5_p6_fully_scored$promis_anx_sum , breaks=c(0, 7, 8, 13, 100), right = FALSE, labels = FALSE)
+  )
+
+# recodes ranking from int to group titles
+p5_p6_fully_scored <- p5_p6_fully_scored %>%
+  mutate(promis_anx_ranking = recode(p5_p6_fully_scored$promis_anx_ranking, "1" = "normal", "2" = "mild", "3" = "moderate", "4" = "severe"))
+```
+
+##PROMIS Depression rankings
+```{r}
+#'severe' if  ≥ 27, 'moderate' if ≥ 18, 'mild' if  ≥ 14, 'normal' if ≥ 0
+#From Tobias 
+p5_p6_fully_scored <- p5_p6_fully_scored %>%
+  mutate(
+    promis_dep_ranking=cut(p5_p6_fully_scored$promis_dep_sum , breaks=c(0, 14, 18, 27, 100), right = FALSE, labels = FALSE)
+  )
+
+# recodes ranking from int to group titles
+p5_p6_fully_scored <- p5_p6_fully_scored %>%
+  mutate(promis_dep_ranking = recode(p5_p6_fully_scored$promis_dep_ranking, "1" = "normal", "2" = "mild", "3" = "moderate", "4" = "severe"))
 
 ```
 
+#Quick stats 
+##Sample sizes
+```{r}
+#Total sample size
+nrow(p5_p6_fully_scored) #N = 973
 
+#Peru 5 sample size
+nrow(p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 5', ]) #N Peru 5 = 496
 
+#Peru 6 sample size
+nrow(p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 6', ]) #N Peru 6 = 477
+```
 
+##Percentage sex
+###Female % of Full sample
+```{r}
+total_n <- nrow(p5_p6_fully_scored)
+total_n #N = 973
 
+sex_counts <- table(p5_p6_fully_scored$gender)
+sex_counts #F = 625, M = 348
 
+sex_percentage <- (sex_counts / total_n) * 100
+sex_percentage #Female = 64.23433 = 64.2%
+```
 
+###Female % of Peru 5
+```{r}
+total_n_p5 <- nrow(p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 5', ])
+total_n_p5 #N = 496
 
+sex_counts_p5 <- table((p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 5', ])$gender)
+sex_counts_p5 #F = 306, M = 190
 
+sex_percentage_p5 <- (sex_counts_p5 / total_n_p5) * 100
+sex_percentage_p5 #Female = 61.69355 = 61.7%
+```
 
+###Female % of Peru 6
+```{r}
+total_n_p6 <- nrow(p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 6', ])
+total_n_p6 #N = 477
 
+sex_counts_p6 <- table((p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 6', ])$gender)
+sex_counts_p6 #F = 319, M = 158
 
+sex_percentage_p6 <- (sex_counts_p6 / total_n_p6) * 100
+sex_percentage_p6 #Female = 66.87631 = 66.9%
+```
 
+##Age Range, Mean, SD 
+###Full Sample
+```{r}
+#Range age
+range(p5_p6_fully_scored$age_official_confirm) #11-17
 
+#Mean age
+mean(p5_p6_fully_scored$age_official_confirm) #12.88386
 
+#SD age
+sd(p5_p6_fully_scored$age_official_confirm) #1.538222
 
+#Range grade
+range(p5_p6_fully_scored$grade_2021) #6-11
 
+#Mean grade
+mean(p5_p6_fully_scored$grade_2021) #7.640288
 
+#SD grade
+sd(p5_p6_fully_scored$grade_2021) #1.49557
+```
 
+###Peru 5 
+####Peru 5 data set
+```{r}
+p5_data <- p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 5', ]
+```
 
+####Age & Grade Range, Mean, SD
+```{r}
+#Range age
+range(p5_data$age_official_confirm) #11-17
 
+#Mean age
+mean(p5_data$age_official_confirm) #12.64113
 
+#SD age
+sd(p5_data$age_official_confirm) #1.501596
 
+#Range grade
+range(p5_data$grade_2021) #6-11
 
+#Mean grade
+mean(p5_data$grade_2021) #7.627016
 
+#SD grade
+sd(p5_data$grade_2021) #1.489355
+```
 
+####DSS Range, Mean, SD 
+#####Total DSS
+```{r}
+#Range
+range(p5_data$dss_total_avg) #1.055556 - 4.833333
+
+#Mean
+mean(p5_data$dss_total_avg) #2.12108
+
+#SD
+sd(p5_data$dss_total_avg) #0.7499721
+```
+
+#####Availability Stress
+```{r}
+#Range
+range(p5_data$avail_stress) #1 - 5
+
+#Mean
+mean(p5_data$avail_stress) #2.188172
+
+#SD
+sd(p5_data$avail_stress) #0.91844
+```
+
+#####Approval Anxiety
+```{r}
+#Range
+range(p5_data$approval_anx) #1 - 5
+
+#Mean
+mean(p5_data$approval_anx) #1.998992
+
+#SD
+sd(p5_data$approval_anx) #1.1126
+```
+
+#####Connection Overload
+```{r}
+#Range
+range(p5_data$connect_overload) #1 - 5
+
+#Mean
+mean(p5_data$connect_overload) #1.936828
+
+#SD
+sd(p5_data$connect_overload) #0.8682174
+```
+
+#####FOMO
+```{r}
+#Range
+range(p5_data$fomo) #1 - 5
+
+#Mean
+mean(p5_data$fomo) #1.890625
+
+#SD
+sd(p5_data$fomo) #0.9355535
+```
+
+#####Online Vigilance
+```{r}
+#Range
+range(p5_data$online_vigil) #1 - 5
+
+#Mean
+mean(p5_data$online_vigil) #2.561492
+
+#SD
+sd(p5_data$online_vigil) #0.9562389
+```
+
+####PROMIS Anxiety Range, Mean, SD
+```{r}
+#Range
+range(p5_data$promis_anx_sum) #4 - 20
+
+#Mean
+mean(p5_data$promis_anx_sum) #10.66331
+
+#SD
+sd(p5_data$promis_anx_sum) #3.580185
+```
+
+####PROMIS Depression Range, Mean, SD
+```{r}
+#Range
+range(p5_data$promis_dep_sum) #8 - 40
+
+#Mean
+mean(p5_data$promis_dep_sum) #19.80847
+
+#SD
+sd(p5_data$promis_dep_sum) #8.113439
+```
+
+###Peru 6 
+####Peru 6 data set
+```{r}
+p6_data <- p5_p6_fully_scored[p5_p6_fully_scored$wave == 'Peru 6', ]
+```
+
+####Age & Grade Range, Mean, SD
+```{r}
+#Range age
+range(p6_data$age_official_confirm) #11-17
+
+#Mean age
+mean(p6_data$age_official_confirm) #13.13627
+
+#SD age
+sd(p6_data$age_official_confirm) #1.536764
+
+#Range grade
+range(p6_data$grade_2021) #6-11
+
+#Mean grade
+mean(p6_data$grade_2021) #7.654088
+
+#SD grade
+sd(p6_data$grade_2021) #1.503445
+```
+
+####DSS Range, Mean, SD 
+#####Total DSS
+```{r}
+#Range
+range(p6_data$dss_total_avg) #1.055556 - 4.777778
+
+#Mean
+mean(p6_data$dss_total_avg) #2.06103
+
+#SD
+sd(p6_data$dss_total_avg) #0.7669835
+```
+
+#####Availability Stress
+```{r}
+#Range
+range(p6_data$avail_stress) #1 - 5
+
+#Mean
+mean(p6_data$avail_stress) #1.912648
+
+#SD
+sd(p6_data$avail_stress) #0.8645745
+```
+
+#####Approval Anxiety
+```{r}
+#Range
+range(p6_data$approval_anx) #1 - 5
+
+#Mean
+mean(p6_data$approval_anx) #2.066562
+
+#SD
+sd(p6_data$approval_anx) #1.139737
+```
+
+#####Connection Overload
+```{r}
+#Range
+range(p6_data$connect_overload) #1 - 5
+
+#Mean
+mean(p6_data$connect_overload) #1.889588
+
+#SD
+sd(p6_data$connect_overload) #0.8481408
+```
+
+#####FOMO
+```{r}
+#Range
+range(p6_data$fomo) #1 - 5
+
+#Mean
+mean(p6_data$fomo) #1.940252
+
+#SD
+sd(p6_data$fomo) #0.9168958
+```
+
+#####Online Vigilance
+```{r}
+#Range
+range(p6_data$online_vigil) #1 - 5
+
+#Mean
+mean(p6_data$online_vigil) #2.416143
+
+#SD
+sd(p6_data$online_vigil) #0.9923771
+```
+
+####PROMIS Anxiety Range, Mean, SD
+```{r}
+#Range 
+range(p6_data$promis_anx_sum) #4 - 20
+
+#Mean 
+mean(p6_data$promis_anx_sum) #11.07547
+
+#SD 
+sd(p6_data$promis_anx_sum) #4.034849
+```
+
+####PROMIS Depression Range, Mean, SD
+```{r}
+#Range 
+range(p6_data$promis_dep_sum) #8 - 40
+
+#Mean age
+mean(p6_data$promis_dep_sum) #21.06709
+
+#SD age
+sd(p6_data$promis_dep_sum) #8.575891
+```
+
+#Create and export CSV with filtered data ##Set new data folder path for this project
+```{r}
+proj_data_dir = here() #Stay in the "digitalstress_p5_p6" folder
+project_data_folder <- file.path(proj_data_dir, "data") #Path to the data folder for this project
+```
+
+#Create & name the CSV and save it in the data_folder (defined at the beginning of the script)
+```{r}
+write.csv(p5_p6_fully_scored, here(project_data_folder, "p5_p6_dss_promis_fully_scored.csv"), row.names= FALSE)
+```

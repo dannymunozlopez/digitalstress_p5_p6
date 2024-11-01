@@ -11,7 +11,10 @@ Used "Peru5_6_relevant_measures_filtered_copy.csv" in dss_anx_dep_plots_DML
   
 
 IMPORTANT FOR DSS P6: 
-  DID NOT INCLUDE 20 ITEMS, DROPPED 6 AND 18 SO FULL DSS ONLY HAS 18 ITEMS 
+  DID NOT INCLUDE 20 ITEMS, DROPPED 6 AND 18 SO FULL DSS ONLY HAS 18 ITEMS, therefore DSS 19 and 20 are NA for all of Peru 6 data
+FOR PERU 5:
+  We administered all 20 items, but after EFA dropped items 6 and 18 out of the 20 items were dropped
+
 #make DF with only Peru 6 data 
 p6 <- peru6_relevant_clean[grepl("6_", peru6_relevant_clean$wave_ID),] #N = 782
 #drop items 19 and 20 since there is no data for this
@@ -33,3 +36,5 @@ p6 <- p6 %>%
          "dss19" = "dss17",
          "dss20" = "dss18")
 *review filter_p6_relevant_measures RMD in digitalstress_p5
+
+UPDATE AS OF 10/02/2024: CHANGED ORIGINAL DATA FILE TO PULL DATA. Now using peru56_DSS_PROMIS_(PSS)_RT_2023Jan25.csv (this data was preprocessed by RT and includes complete cases of DSS and PROMIS data)

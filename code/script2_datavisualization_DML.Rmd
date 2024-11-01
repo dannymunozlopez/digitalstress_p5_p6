@@ -1,0 +1,475 @@
+---
+title: "Data Visualization"
+author: "Daniela Munoz Lopez"
+date: "2024-10-22"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#clear environment (RUN EACH TIME SCRIPT IS OPENED)
+rm(list = ls())
+```
+
+#Load Packages
+```{r}
+#Load in packages that will be used throughout the markdown.
+packages <- c("tidyverse",
+                "summarytools",
+                "psych",
+                "reader",
+                "tidyr",
+                "lme4",
+                "lmerTest",
+                "jtools",
+                "interactions",
+                "rio",
+                "ggplot2",
+                "dplyr",
+                "here")
+#invisible(lapply(packages, install.packages, character.only = TRUE)) #install packages (only run once)
+invisible(lapply(packages, library, character.only = TRUE)) #load the packages
+```
+
+#Load data
+```{r}
+#load data.
+data_dir = here() #Move to the digitalstress_p5_p6 folder (project folder)
+
+data_folder <- "data" #Name of the folder containing the preprocessed data
+
+data_folder_path <- file.path(data_dir, data_folder) #Path to the data within data folder
+
+file_name <- "p5_p6_dss_promis_fully_scored.csv" #Name of the preprocessed data that was created in script1_datacleaning_DML
+
+peru5_6_data <- read.csv(here(data_folder_path,file_name), header = T, sep = ",", na.strings=c("", " ","NA")) #Load data
+
+nrow(peru5_6_data) #N = 973 -- ok: does match N in script 1
+
+#check data
+head(peru5_6_data, 20)
+tail(peru5_6_data, 20)
+```
+
+#All Data
+##Histogram of variables
+###Age & Grade
+```{r}
+#Age
+hist(peru5_6_data$age_official_confirm,
+     main="Participant Age", 
+     xlab="Age",
+     xlim=c(10, 18))
+
+#Grade
+hist(peru5_6_data$grade_2021,
+     main="Participant Grade", 
+     xlab="Grade",
+     xlim=c(6, 11))
+
+#All have a positive skew
+```
+
+###Digital Stress
+```{r}
+#Availability Stress
+hist(peru5_6_data$avail_stress,
+     main="Availability Stress", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#FOMO
+hist(peru5_6_data$fomo,
+     main="FOMO", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Approval Anxiety
+hist(peru5_6_data$approval_anx,
+     main="Approval Anxiety", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Connection Overload
+hist(peru5_6_data$connect_overload,
+     main="Connection Overload", 
+     xlab="Participant Scores",
+     xlim=c(1, 5),)
+
+#Online Vigilance
+hist(peru5_6_data$online_vigil,
+     main="Online Vigilance", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Total DSS
+hist(peru5_6_data$dss_total_avg,
+     main="Total Digital Stress Average", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#All have a positive skew
+```
+
+###PROMIS Anxiety
+```{r}
+hist(peru5_6_data$promis_anx_sum,
+     main="PROMIS Anxiety -- Sum Score", 
+     xlab="Participant Scores",
+     xlim=c(4, 20))
+
+#Normal distribution -- maybe slight positive skew?
+```
+
+###PROMIS Depression
+```{r}
+hist(peru5_6_data$promis_dep_sum,
+     main="PROMIS Depression -- Sum Score", 
+     xlab="Participant Scores",
+     xlim=c(8, 40))
+
+#Normal distribution -- maybe slight positive skew?
+```
+
+##Scatterplot of variables
+###Digital Stress
+```{r}
+#Availability Stress
+plot(peru5_6_data$avail_stress,
+     main="Availability Stress",
+     ylab="Availability Stress Scores",
+     ylim=c(1, 5))
+
+#FOMO
+plot(peru5_6_data$fomo,
+     main="FOMO",
+     ylab="FOMO Scores",
+     ylim=c(1, 5))
+
+#Approval Anxiety 
+plot(peru5_6_data$approval_anx,
+     main="Approval Anxiety",
+     ylab="Approval Anxiety Scores",
+     ylim=c(1, 5))
+
+#Connection Overload
+plot(peru5_6_data$connect_overload,
+     main="Connection Overload",
+     ylab="Connection Overload Scores",
+     ylim=c(1, 5))
+
+#Online Vigilance
+plot(peru5_6_data$online_vigil,
+     main="Online Vigilance",
+     ylab="Online Vigilance Scores",
+     ylim=c(1, 5))
+
+#Total DSS
+plot(peru5_6_data$dss_total_avg,
+     main="Total Digital Stress Average",
+     ylab="Total Digital Stress Average Scores",
+     ylim=c(1, 5))
+```
+
+###PROMIS Anxiety
+```{r}
+plot(peru5_6_data$promis_anx_sum,
+     main="PROMIS Anxiety",
+     ylab="PROMIS Anxiety -- Sum Score",
+     ylim=c(4, 20))
+```
+
+###PROMIS Depression
+```{r}
+plot(peru5_6_data$promis_dep_sum,
+     main="PROMIS Depression",
+     ylab="PROMIS Depression -- Sum Score",
+     ylim=c(8, 40))
+```
+
+#Peru 5 Data
+##Get data
+```{r}
+p5 <- peru5_6_data[peru5_6_data$wave == 'Peru 5', ]
+```
+
+##Histogram of variables
+###Age & Grade
+```{r}
+#Age
+hist(p5$age_official_confirm,
+     main="Participant Age", 
+     xlab="Age",
+     xlim=c(10, 18))
+
+#Grade
+hist(p5$grade_2021,
+     main="Participant Grade", 
+     xlab="Grade",
+     xlim=c(6, 11))
+
+#All have a positive skew
+```
+
+###Digital Stress
+```{r}
+#Availability Stress
+hist(p5$avail_stress,
+     main="Availability Stress", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#FOMO
+hist(p5$fomo,
+     main="FOMO", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Approval Anxiety
+hist(p5$approval_anx,
+     main="Approval Anxiety", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Connection Overload
+hist(p5$connect_overload,
+     main="Connection Overload", 
+     xlab="Participant Scores",
+     xlim=c(1, 5),)
+
+#Online Vigilance
+hist(p5$online_vigil,
+     main="Online Vigilance", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Total DSS
+hist(p5$dss_total_avg,
+     main="Total Digital Stress Average", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#All have a positive skew
+```
+
+###PROMIS Anxiety
+```{r}
+hist(p5$promis_anx_sum,
+     main="PROMIS Anxiety -- Sum Score", 
+     xlab="Participant Scores",
+     xlim=c(4, 20))
+
+#Normal distribution -- maybe slight positive skew?
+```
+
+###PROMIS Depression
+```{r}
+hist(p5$promis_dep_sum,
+     main="PROMIS Depression -- Sum Score", 
+     xlab="Participant Scores",
+     xlim=c(8, 40))
+
+#Normal distribution -- maybe slight positive skew?
+```
+
+##Scatterplot of variables
+###Digital Stress
+```{r}
+#Availability Stress
+plot(p5$avail_stress,
+     main="Availability Stress",
+     ylab="Availability Stress Scores",
+     ylim=c(1, 5))
+
+#FOMO
+plot(p5$fomo,
+     main="FOMO",
+     ylab="FOMO Scores",
+     ylim=c(1, 5))
+
+#Approval Anxiety 
+plot(p5$approval_anx,
+     main="Approval Anxiety",
+     ylab="Approval Anxiety Scores",
+     ylim=c(1, 5))
+
+#Connection Overload
+plot(p5$connect_overload,
+     main="Connection Overload",
+     ylab="Connection Overload Scores",
+     ylim=c(1, 5))
+
+#Online Vigilance
+plot(p5$online_vigil,
+     main="Online Vigilance",
+     ylab="Online Vigilance Scores",
+     ylim=c(1, 5))
+
+#Total DSS
+plot(p5$dss_total_avg,
+     main="Total Digital Stress Average",
+     ylab="Total Digital Stress Average Scores",
+     ylim=c(1, 5))
+```
+
+###PROMIS Anxiety
+```{r}
+plot(p5$promis_anx_sum,
+     main="PROMIS Anxiety",
+     ylab="PROMIS Anxiety -- Sum Score",
+     ylim=c(4, 20))
+```
+
+###PROMIS Depression
+```{r}
+plot(p5$promis_dep_sum,
+     main="PROMIS Depression",
+     ylab="PROMIS Depression -- Sum Score",
+     ylim=c(8, 40))
+```
+
+#Peru 6 Data
+##Get data
+```{r}
+p6 <- peru5_6_data[peru5_6_data$wave == 'Peru 6', ]
+```
+
+##Histogram of variables
+###Age & Grade
+```{r}
+#Age
+hist(p6$age_official_confirm,
+     main="Participant Age", 
+     xlab="Age",
+     xlim=c(10, 18))
+
+#Grade
+hist(p6$grade_2021,
+     main="Participant Grade", 
+     xlab="Grade",
+     xlim=c(6, 11))
+
+#All have a positive skew
+```
+
+###Digital Stress
+```{r}
+#Availability Stress
+hist(p6$avail_stress,
+     main="Availability Stress", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#FOMO
+hist(p6$fomo,
+     main="FOMO", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Approval Anxiety
+hist(p6$approval_anx,
+     main="Approval Anxiety", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Connection Overload
+hist(p6$connect_overload,
+     main="Connection Overload", 
+     xlab="Participant Scores",
+     xlim=c(1, 5),)
+
+#Online Vigilance
+hist(p6$online_vigil,
+     main="Online Vigilance", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#Total DSS
+hist(p6$dss_total_avg,
+     main="Total Digital Stress Average", 
+     xlab="Participant Scores",
+     xlim=c(1, 5))
+
+#All have a positive skew
+```
+
+###PROMIS Anxiety
+```{r}
+hist(p6$promis_anx_sum,
+     main="PROMIS Anxiety -- Sum Score", 
+     xlab="Participant Scores",
+     xlim=c(4, 20))
+
+#Normal distribution -- maybe slight positive skew?
+```
+
+###PROMIS Depression
+```{r}
+hist(p6$promis_dep_sum,
+     main="PROMIS Depression -- Sum Score", 
+     xlab="Participant Scores",
+     xlim=c(8, 40))
+
+#Normal distribution -- maybe slight positive skew?
+```
+
+##Scatterplot of variables
+###Digital Stress
+```{r}
+#Availability Stress
+plot(p6$avail_stress,
+     main="Availability Stress",
+     ylab="Availability Stress Scores",
+     ylim=c(1, 5))
+
+#FOMO
+plot(p6$fomo,
+     main="FOMO",
+     ylab="FOMO Scores",
+     ylim=c(1, 5))
+
+#Approval Anxiety 
+plot(p6$approval_anx,
+     main="Approval Anxiety",
+     ylab="Approval Anxiety Scores",
+     ylim=c(1, 5))
+
+#Connection Overload
+plot(p6$connect_overload,
+     main="Connection Overload",
+     ylab="Connection Overload Scores",
+     ylim=c(1, 5))
+
+#Online Vigilance
+plot(p6$online_vigil,
+     main="Online Vigilance",
+     ylab="Online Vigilance Scores",
+     ylim=c(1, 5))
+
+#Total DSS
+plot(p6$dss_total_avg,
+     main="Total Digital Stress Average",
+     ylab="Total Digital Stress Average Scores",
+     ylim=c(1, 5))
+```
+
+###PROMIS Anxiety
+```{r}
+plot(p6$promis_anx_sum,
+     main="PROMIS Anxiety",
+     ylab="PROMIS Anxiety -- Sum Score",
+     ylim=c(4, 20))
+```
+
+###PROMIS Depression
+```{r}
+plot(p6$promis_dep_sum,
+     main="PROMIS Depression",
+     ylab="PROMIS Depression -- Sum Score",
+     ylim=c(8, 40))
+```
