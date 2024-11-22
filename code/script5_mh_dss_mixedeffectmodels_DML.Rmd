@@ -122,8 +122,12 @@ model7 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 * grade_2021 + w
 #Model summary
 summary(model7) #Interaction: effect of grade on DSS is similar for clinical & non-clinical anxiety -- As grade increases, DSS increases more for those with clinical anxiety
 
-#Plot model 
-ggplot(peru5_6_data, aes(x = grade_2021, y = dss_total_avg)) +
+# Remove rows with NAs in the relevant variables
+peru5_6_data_clean <- peru5_6_data %>%
+  drop_na(grade_2021, dss_total_avg, anx_clinical_status_invariant_p5)
+
+# Now create the interaction plot
+ggplot(peru5_6_data_clean, aes(x = grade_2021, y = dss_total_avg)) +
   geom_point(aes(color = anx_clinical_status_invariant_p5), alpha = 0.5) + # Scatter points
   geom_smooth(method = "lm", aes(color = anx_clinical_status_invariant_p5), se = FALSE) + # Regression lines
   facet_wrap(~wave) + # Separate by wave (Time 1 or Time 2)
