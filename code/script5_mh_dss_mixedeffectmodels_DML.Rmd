@@ -22,8 +22,8 @@ packages <- c("tidyverse",
                 "psych",
                 "reader",
                 "tidyr",
-                "lme4",
-                "lmerTest",
+                "lme4", #runs mixed-effect models
+                "lmerTest", #runs p-values in mixed-effect models
                 "jtools",
                 "interactions",
                 "rio",
@@ -64,3 +64,238 @@ peru5_6_data <- peru5_6_data %>%
                                      "Peru 6"='Time 2')))
 ```
 
+HYPOTHESIS: Baseline mental health vulnerabilities (anxiety, depression) at Time 1 predict increases in digital stress at Time 2.
+
+#Anxiety at Time 2 predicting DSS total average.
+###Model 1 NOTE: may need to change lmer to clmm to account for the ordinal and positive skew of the DSS data by running ordinal mixed-effect models.
+```{r}
+model1 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model1) #non-clinical had lower DSS
+```
+
+###Model 2
+```{r}
+model2 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + wave + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model2) #DSS lower at time 2
+```
+
+###Model 3
+```{r}
+model3 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + wave + gender + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model3) #DSS lower at time 2 
+```
+
+###Model 4
+```{r}
+model4 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model4) #DSS higher for older adolescents
+```
+
+###Model 5
+```{r}
+model5 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 * wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model5) #No interaction: effect of Time 2 on DSS is similar for clinical & non-clinical anxiety 
+```
+
+###Model 6
+```{r}
+model6 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 * gender + wave + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model6) #No interaction: effect of gender on DSS is similar for clinical & non-clinical anxiety 
+```
+
+###Model 7
+```{r}
+model7 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 * grade_2021 + wave + gender + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model7) #Interaction: effect of grade on DSS is similar for clinical & non-clinical anxiety -- As grade increases, DSS increases more for those with clinical anxiety
+
+#Plot model 
+ggplot(peru5_6_data, aes(x = grade_2021, y = dss_total_avg)) +
+  geom_point(aes(color = anx_clinical_status_invariant_p5), alpha = 0.5) + # Scatter points
+  geom_smooth(method = "lm", aes(color = anx_clinical_status_invariant_p5), se = FALSE) + # Regression lines
+  facet_wrap(~wave) + # Separate by wave (Time 1 or Time 2)
+  labs(
+    title = "Interaction Between Grade and Anxiety Clinical Status on DSS Scores",
+    x = "Grade 2021",
+    y = "DSS Total Average",
+    color = "Anxiety Clinical Status"
+  ) +
+  theme_minimal()
+```
+
+###Model 8
+```{r}
+model8 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 * wave * gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model8) #No interaction: effect of wave and gender on DSS is similar for clinical & non-clinical depression 
+```
+
+##Compare models with ANOVA
+```{r}
+anova(model1, model2) #model 2
+anova(model2, model3) #model 2
+anova(model2, model4) #model 4 
+anova(model4, model5) #model 4
+anova(model4, model6) #model 4
+anova(model4, model7) #model 7
+anova(model7, model8) #model 7
+anova(model7, model3) #model 7
+anova(model1, model7) #model 7
+```
+
+##Compare models with AIC (lower is better)
+```{r}
+model_aic_values <- sapply(list(model1, model2, model3, model4, model5, model6, model7, model8), AIC)
+print(model_aic_values)
+```
+
+##Compare models with BIC (lower is better)
+```{r}
+model_bic_values <- sapply(list(model1, model2, model3, model4, model5, model6, model7, model8), BIC)
+print(model_bic_values)
+```
+
+##Table of models 
+```{r}
+# Create a data frame to hold model comparison results
+model_comparison <- data.frame(
+  Model = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6", "Model 7", "Model 8"),
+  AIC = c(AIC(model1), AIC(model2), AIC(model3), AIC(model4), AIC(model5), AIC(model6), AIC(model7), AIC(model8)),
+  BIC = c(BIC(model1), BIC(model2), BIC(model3), BIC(model4), BIC(model5), BIC(model6), BIC(model7), BIC(model8)),
+  LogLik = c(logLik(model1), logLik(model2), logLik(model3), logLik(model4), logLik(model5), logLik(model6), logLik(model7), logLik(model8)),
+  stringsAsFactors = FALSE
+)
+
+# Highlight the best model based on AIC (the lower, the better)
+best_model_index <- which.min(model_comparison$AIC)
+model_comparison$BestModel <- ifelse(1:nrow(model_comparison) == best_model_index, "Winning", "Not Winning")
+
+# Use knitr for a nicer table
+library(knitr)
+kable(model_comparison, caption = "Anxiety Model Comparison Table")
+```
+
+
+#Depression at Time 2 predicting DSS total average.
+###Model 1 NOTE: may need to change lmer to clmm to account for the ordinal and positive skew of the DSS data by running ordinal mixed-effect models.
+```{r}
+model1 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model1) #non-clinical had lower DSS
+```
+
+###Model 2
+```{r}
+model2 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 + wave + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model2) #DSS lower at time 2
+```
+
+###Model 3
+```{r}
+model3 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 + wave + gender + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model3) #DSS lower at time 2
+```
+
+###Model 4
+```{r}
+model4 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 + wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model4) #DSS higher for older adolescents
+```
+
+###Model 5
+```{r}
+model5 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 * wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model5) #No interaction: effect of Time 2 on DSS is similar for clinical & non-clinical depression 
+```
+
+###Model 6
+```{r}
+model6 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 * gender + wave + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model6) #No interaction: effect of gender on DSS is similar for clinical & non-clinical depression 
+```
+
+###Model 7
+```{r}
+model7 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 * grade_2021 + wave + gender + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model7) #No interaction: effect of grade on DSS is similar for clinical & non-clinical depression 
+```
+
+###Model 8
+```{r}
+model8 <- lmer(dss_total_avg ~ dep_clinical_status_invariant_p5 * wave * gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model8) #No interaction: effect of wave and gender on DSS is similar for clinical & non-clinical depression 
+```
+
+##Compare models with ANOVA
+```{r}
+anova(model1, model2) #model 2
+anova(model2, model3) #model 2
+anova(model2, model4) #model 4 (compare w model 3)
+anova(model4, model5) #model 4
+anova(model4, model6) #model 4
+anova(model4, model7) #model 4
+anova(model4, model8) #model 4
+anova(model4, model3) #model 3
+anova(model1, model4) #model 4
+```
+
+##Compare models with AIC (lower is better)
+```{r}
+model_aic_values <- sapply(list(model1, model2, model3, model4, model5, model6, model7, model8), AIC)
+print(model_aic_values)
+```
+
+##Compare models with BIC (lower is better)
+```{r}
+model_bic_values <- sapply(list(model1, model2, model3, model4, model5, model6, model7, model8), BIC)
+print(model_bic_values)
+```
+
+##Table of models 
+```{r}
+# Create a data frame to hold model comparison results
+model_comparison <- data.frame(
+  Model = c("Model 1", "Model 2", "Model 3", "Model 4", "Model 5", "Model 6", "Model 7", "Model 8"),
+  AIC = c(AIC(model1), AIC(model2), AIC(model3), AIC(model4), AIC(model5), AIC(model6), AIC(model7), AIC(model8)),
+  BIC = c(BIC(model1), BIC(model2), BIC(model3), BIC(model4), BIC(model5), BIC(model6), BIC(model7), BIC(model8)),
+  LogLik = c(logLik(model1), logLik(model2), logLik(model3), logLik(model4), logLik(model5), logLik(model6), logLik(model7), logLik(model8)),
+  stringsAsFactors = FALSE
+)
+
+# Highlight the best model based on AIC (the lower, the better)
+best_model_index <- which.min(model_comparison$AIC)
+model_comparison$BestModel <- ifelse(1:nrow(model_comparison) == best_model_index, "Winning", "Not Winning")
+
+# Use knitr for a nicer table
+library(knitr)
+kable(model_comparison, caption = "Depression Model Comparison Table")
+```
