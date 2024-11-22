@@ -1,0 +1,66 @@
+---
+title: "Baseline Mental Health Predicting DSS"
+author: "Daniela Munoz Lopez"
+date: "2024-11-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#clear environment (RUN EACH TIME SCRIPT IS OPENED)
+rm(list = ls())
+```
+
+#Load Packages
+```{r}
+#Load in packages that will be used throughout the markdown.
+packages <- c("tidyverse",
+                "summarytools",
+                "psych",
+                "reader",
+                "tidyr",
+                "lme4",
+                "lmerTest",
+                "jtools",
+                "interactions",
+                "rio",
+                "ggplot2",
+                "dplyr",
+                "here",
+                "emmeans",
+                "sjPlot")
+#invisible(lapply(packages, install.packages, character.only = TRUE)) #install packages (only run once)
+invisible(lapply(packages, library, character.only = TRUE)) #load the packages
+```
+
+#Load data
+```{r}
+#load data.
+data_dir = here() #Move to the digitalstress_p5_p6 folder (project folder)
+
+data_folder <- "data" #Name of the folder containing the preprocessed data
+
+data_folder_path <- file.path(data_dir, data_folder) #Path to the data within data folder
+
+file_name <- "p5_p6_dss_promis_fully_scored.csv" #Name of the preprocessed data that was created in script1_datacleaning_DML
+
+peru5_6_data <- read.csv(here(data_folder_path,file_name), header = T, sep = ",", na.strings=c("", " ","NA")) #Load data
+
+nrow(peru5_6_data) #N = 973 -- ok: does match N in script 1
+
+#check data
+head(peru5_6_data, 20)
+tail(peru5_6_data, 20)
+```
+
+#Recode wave to timepoint 
+```{r}
+peru5_6_data <- peru5_6_data %>% 
+     dplyr::mutate_at(c('wave'), 
+               funs(dplyr::recode(., "Peru 5"='Time 1',
+                                     "Peru 6"='Time 2')))
+```
+

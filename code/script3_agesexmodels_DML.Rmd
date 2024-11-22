@@ -55,19 +55,6 @@ head(peru5_6_data, 20)
 tail(peru5_6_data, 20)
 ```
 
-#Long data, repeated observations (2), aging effects (change over time within participants) & cohort effects (diff between subjects @ baseline), account for correlation between variables since they are repeated
-#spaghetti & box plots by time
-#mean profiles
-#scatterplot matrix of responses at different time points
-#mixed effects modeling (fixed [population] & random [individual] effects)
-
-
-
-Research questions
-1. Do males and females differ in their DSS endorsement over time 
-2. Do grades differ in their DSS endorsement over time
-3. 
-
 #Recode wave to timepoint 
 ```{r}
 peru5_6_data <- peru5_6_data %>% 
@@ -140,28 +127,28 @@ ggsave(file.name,plot = last_plot(), dpi = 300, device = "tiff") #Save the plot
 
 ##PROMIS Anxiety
 ```{r}
-avail_stress_gen_grade_lm <- lm(avail_stress ~ wave + promis_anx_ranking, peru5_6_data)
-approv_anx_gen_grade_lm <- lm(approval_anx ~ wave + promis_anx_ranking, peru5_6_data)
-fomo_gen_grade_lm <- lm(fomo ~ wave + promis_anx_ranking, peru5_6_data)
-online_vigil_gen_grade_lm <- lm(online_vigil ~ wave + promis_anx_ranking, peru5_6_data)
-connect_over_gen_grade_lm <- lm(connect_overload ~ wave + promis_anx_ranking, peru5_6_data)
+avail_stress_gen_grade_lm <- lm(avail_stress ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+approv_anx_gen_grade_lm <- lm(approval_anx ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+fomo_gen_grade_lm <- lm(fomo ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+online_vigil_gen_grade_lm <- lm(online_vigil ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+connect_over_gen_grade_lm <- lm(connect_overload ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
 ```
 
 ##Emmeans
 ```{r}
-lsm_plot_availability <- summary(emmeans(avail_stress_gen_grade_lm, ~wave|promis_anx_ranking))
+lsm_plot_availability <- summary(emmeans(avail_stress_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
 lsm_plot_availability$task<- "Availability Stress"
 
-lsm_plot_approval <- summary(emmeans(approv_anx_gen_grade_lm, ~wave|promis_anx_ranking))
+lsm_plot_approval <- summary(emmeans(approv_anx_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
 lsm_plot_approval$task<- "Approval Anxiety"
 
-lsm_plot_fomo <- summary(emmeans(fomo_gen_grade_lm, ~wave|promis_anx_ranking))
+lsm_plot_fomo <- summary(emmeans(fomo_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
 lsm_plot_fomo$task<-"FOMO"
 
-lsm_plot_vigilance <- summary(emmeans(online_vigil_gen_grade_lm, ~wave|promis_anx_ranking))
+lsm_plot_vigilance <- summary(emmeans(online_vigil_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
 lsm_plot_vigilance$task<- "Online Vigilance"
 
-lsm_plot_connection <- summary(emmeans(connect_over_gen_grade_lm, ~wave|promis_anx_ranking))
+lsm_plot_connection <- summary(emmeans(connect_over_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
 lsm_plot_connection$task<-"Connection Overload"
 
 ```
@@ -174,10 +161,10 @@ lsm_plot_confirm_df <- rbind(lsm_plot_availability, lsm_plot_approval, lsm_plot_
 ##Plot
 ```{r}
 pd <- position_dodge(width = 0.1)
-age_gender_plot <- ggplot(data=rbind(lsm_plot_availability, lsm_plot_approval, lsm_plot_fomo, lsm_plot_vigilance, lsm_plot_connection), aes(y = emmean, ymax = emmean+SE, ymin = emmean- SE, x = wave, group = interaction(task, promis_anx_ranking), color = promis_anx_ranking))
+age_gender_plot <- ggplot(data=rbind(lsm_plot_availability, lsm_plot_approval, lsm_plot_fomo, lsm_plot_vigilance, lsm_plot_connection), aes(y = emmean, ymax = emmean+SE, ymin = emmean- SE, x = wave, group = interaction(task, anx_clinical_status_invariant_p5), color = anx_clinical_status_invariant_p5))
 age_gender_plot <- age_gender_plot + geom_line(position=pd, size = 1) + geom_point(size=I(2), position=pd)+ geom_errorbar(width=0.3, position=pd)
 age_gender_plot <- age_gender_plot + theme_bw() + xlab("Time Point") 
-age_gender_plot <- age_gender_plot + scale_y_continuous(limit = c(1,5), breaks=seq(1,5), name = "Digital Scress Score")
+age_gender_plot <- age_gender_plot + scale_y_continuous(limit = c(1,5), breaks=seq(1,5), name = "Digital Stress Score")
 age_gender_plot <- age_gender_plot + theme(
     plot.background = element_blank()
     ,panel.grid.major = element_blank()
@@ -185,7 +172,7 @@ age_gender_plot <- age_gender_plot + theme(
     ,axis.text=element_text(size=10)
     ,axis.title=element_text(size=16,face="bold")
     ,legend.text=element_text(size=11)
-    ,legend.justification = c(.95, .05), legend.position = c(.17, .60)
+    ,legend.justification = c(.90, .05), legend.position = c(.17, .70)
     ,legend.background = element_rect(fill=NULL)
   )
 age_gender_plot <- age_gender_plot + guides(colour = guide_legend(override.aes=list(size=1)))
@@ -203,28 +190,28 @@ ggsave(file.name,plot = last_plot(), dpi = 300, device = "tiff") #Save the plot
 
 ##PROMIS Depression
 ```{r}
-avail_stress_gen_grade_lm <- lm(avail_stress ~ wave + promis_dep_ranking, peru5_6_data)
-approv_anx_gen_grade_lm <- lm(approval_anx ~ wave + promis_dep_ranking, peru5_6_data)
-fomo_gen_grade_lm <- lm(fomo ~ wave + promis_dep_ranking, peru5_6_data)
-online_vigil_gen_grade_lm <- lm(online_vigil ~ wave + promis_dep_ranking, peru5_6_data)
-connect_over_gen_grade_lm <- lm(connect_overload ~ wave + promis_dep_ranking, peru5_6_data)
+avail_stress_gen_grade_lm <- lm(avail_stress ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+approv_anx_gen_grade_lm <- lm(approval_anx ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+fomo_gen_grade_lm <- lm(fomo ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+online_vigil_gen_grade_lm <- lm(online_vigil ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+connect_over_gen_grade_lm <- lm(connect_overload ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
 ```
 
 ##Emmeans
 ```{r}
-lsm_plot_availability <- summary(emmeans(avail_stress_gen_grade_lm, ~wave|promis_dep_ranking))
+lsm_plot_availability <- summary(emmeans(avail_stress_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
 lsm_plot_availability$task<- "Availability Stress"
 
-lsm_plot_approval <- summary(emmeans(approv_anx_gen_grade_lm, ~wave|promis_dep_ranking))
+lsm_plot_approval <- summary(emmeans(approv_anx_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
 lsm_plot_approval$task<- "Approval Anxiety"
 
-lsm_plot_fomo <- summary(emmeans(fomo_gen_grade_lm, ~wave|promis_dep_ranking))
+lsm_plot_fomo <- summary(emmeans(fomo_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
 lsm_plot_fomo$task<-"FOMO"
 
-lsm_plot_vigilance <- summary(emmeans(online_vigil_gen_grade_lm, ~wave|promis_dep_ranking))
+lsm_plot_vigilance <- summary(emmeans(online_vigil_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
 lsm_plot_vigilance$task<- "Online Vigilance"
 
-lsm_plot_connection <- summary(emmeans(connect_over_gen_grade_lm, ~wave|promis_dep_ranking))
+lsm_plot_connection <- summary(emmeans(connect_over_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
 lsm_plot_connection$task<-"Connection Overload"
 ```
 
@@ -236,7 +223,7 @@ lsm_plot_confirm_df <- rbind(lsm_plot_approval, lsm_plot_availability, lsm_plot_
 ##Create plot
 ```{r}
 pd <- position_dodge(width = 0.1)
-age_gender_plot <- ggplot(data=rbind(lsm_plot_approval, lsm_plot_availability, lsm_plot_fomo, lsm_plot_connection, lsm_plot_vigilance), aes(y = emmean, ymax = emmean+SE, ymin = emmean- SE, x = wave, group = interaction(task, promis_dep_ranking), color = promis_dep_ranking))
+age_gender_plot <- ggplot(data=rbind(lsm_plot_approval, lsm_plot_availability, lsm_plot_fomo, lsm_plot_connection, lsm_plot_vigilance), aes(y = emmean, ymax = emmean+SE, ymin = emmean- SE, x = wave, group = interaction(task, dep_clinical_status_invariant_p5), color = dep_clinical_status_invariant_p5))
 age_gender_plot <- age_gender_plot + geom_line(position=pd, size = 1) + geom_point(size=I(2), position=pd)+ geom_errorbar(width=0.3, position=pd)
 age_gender_plot <- age_gender_plot + theme_bw() + xlab("Time Point") 
 age_gender_plot <- age_gender_plot + scale_y_continuous(limit = c(1,5), breaks=seq(1,5), name = "Digital Stress Score")
@@ -247,7 +234,7 @@ age_gender_plot <- age_gender_plot + theme(
     ,axis.text=element_text(size=10)
     ,axis.title=element_text(size=16,face="bold")
     ,legend.text=element_text(size=11)
-    ,legend.justification = c(.95, .05), legend.position = c(.17, .60)
+    ,legend.justification = c(.90, .05), legend.position = c(.17, .70)
     ,legend.background = element_rect(fill=NULL)
   )
 age_gender_plot <- age_gender_plot + guides(colour = guide_legend(override.aes=list(size=1)))
