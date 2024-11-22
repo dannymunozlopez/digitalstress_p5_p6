@@ -69,7 +69,7 @@ peru5_6_data <- peru5_6_data %>%
 ```{r}
 #Model - avail stress
 avail_stress_gen_grade_lm <- lm(avail_stress ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
-
+summary(avail_stress_gen_grade_lm)
 #Plot Availability Stress
 p_avail <- plot_model(avail_stress_gen_grade_lm,
                 type = "pred", terms = c("wave", "dep_clinical_status_invariant_p5")) + 
@@ -140,7 +140,7 @@ p_indiv_avail
 ```{r}
 #Model - avail stress
 approv_anx_gen_grade_lm_confirm <- lm(approval_anx ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
-
+summary(approv_anx_gen_grade_lm_confirm)
 #Plot Availability Stress
 p_avail <- plot_model(approv_anx_gen_grade_lm_confirm,
                 type = "pred", terms = c("wave", "dep_clinical_status_invariant_p5")) + 
@@ -211,7 +211,7 @@ p_indiv_anx
 ```{r}
 #Model - avail stress
 fomo_gen_grade_lm_confirm <- lm(fomo ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
-
+summary(fomo_gen_grade_lm_confirm)
 #Plot Availability Stress
 p_avail <- plot_model(fomo_gen_grade_lm_confirm,
                 type = "pred", terms = c("wave", "dep_clinical_status_invariant_p5")) + 
@@ -281,7 +281,7 @@ p_indiv_fomo
 ```{r}
 #Model - avail stress
 online_vigil_gen_grade_lm_confirm <- lm(online_vigil ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
-
+summary(online_vigil_gen_grade_lm_confirm)
 #Plot Availability Stress
 p_avail <- plot_model(online_vigil_gen_grade_lm_confirm,
                 type = "pred", terms = c("wave", "dep_clinical_status_invariant_p5")) + 
@@ -352,7 +352,7 @@ p_indiv_ov
 ```{r}
 #Model - avail stress
 connect_over_gen_grade_lm_confirm <- lm(connect_overload ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
-
+summary(connect_over_gen_grade_lm_confirm)
 #Plot Availability Stress
 p_avail <- plot_model(connect_over_gen_grade_lm_confirm,
                 type = "pred", terms = c("wave", "dep_clinical_status_invariant_p5")) + 
