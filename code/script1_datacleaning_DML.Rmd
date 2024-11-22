@@ -637,30 +637,76 @@ alpha(promis_dep_alpha) #raw alpha = 0.940782 = 0.94
 ##PROMIS Anxiety rankings (T-score > 59 = clinical)
 ```{r}
 p5_p6_fully_scored <- p5_p6_fully_scored %>%
-  mutate(clinical_status = ifelse(promis_anx_tscore > 59, "clinical", "non-clinical"))
+  mutate(anx_clinical_status = ifelse(promis_anx_tscore > 59, "clinical", "non-clinical"))
+
+#Number and % of people who are ranked clinically 
+anx_clinical_count <- sum(p5_p6_fully_scored$anx_clinical_status == "clinical")
+
+# Calculate the percentage of "clinical" entries
+anx_total_count <- nrow(p5_p6_fully_scored)
+anx_clinical_percentage <- (anx_clinical_count / anx_total_count) * 100
+
+# Print the results
+print(paste("Number of clinical cases:", anx_clinical_count))
+print(paste("Percentage of clinical cases:", round(anx_clinical_percentage, 2), "%"))
+
+
+#Number and % of people who are ranked non-clinically 
+anx_nonclinical_count <- sum(p5_p6_fully_scored$anx_clinical_status == "non-clinical")
+
+# Calculate the percentage of "non-clinical" entries
+anx_total_count <- nrow(p5_p6_fully_scored)
+anx_nonclinical_percentage <- (anx_nonclinical_count / anx_total_count) * 100
+
+# Print the results
+print(paste("Number of non-clinical cases:", anx_nonclinical_count))
+print(paste("Percentage of non-clinical cases:", round(anx_nonclinical_percentage, 2), "%"))
 ```
 
 ###Set rankings for Peru 5 and Peru 6
 ```{r}
 p5_p6_fully_scored <- p5_p6_fully_scored %>%
   mutate(
-    anxiety_rank_p5 = ifelse(wave == "Peru 5", clinical_status, NA),
-    anxiety_rank_p6 = ifelse(wave == "Peru 6", clinical_status, NA)
+    anxiety_rank_p5 = ifelse(wave == "Peru 5", anx_clinical_status, NA),
+    anxiety_rank_p6 = ifelse(wave == "Peru 6", anx_clinical_status, NA)
   )
 ```
 
 ##PROMIS Depression rankings (T-score > 53 = clinical)
 ```{r}
 p5_p6_fully_scored <- p5_p6_fully_scored %>%
-  mutate(clinical_status = ifelse(promis_dep_tscore > 53, "clinical", "non-clinical"))
+  mutate(dep_clinical_status = ifelse(promis_dep_tscore > 53, "clinical", "non-clinical"))
+
+#Number and % of people who are ranked clinically 
+dep_clinical_count <- sum(p5_p6_fully_scored$dep_clinical_status == "clinical")
+
+# Calculate the percentage of "clinical" entries
+dep_total_count <- nrow(p5_p6_fully_scored)
+dep_clinical_percentage <- (dep_clinical_count / dep_total_count) * 100
+
+# Print the results
+print(paste("Number of clinical cases:", dep_clinical_count))
+print(paste("Percentage of clinical cases:", round(dep_clinical_percentage, 2), "%"))
+
+
+#Number and % of people who are ranked non-clinically 
+dep_nonclinical_count <- sum(p5_p6_fully_scored$dep_clinical_status == "non-clinical")
+
+# Calculate the percentage of "non-clinical" entries
+dep_total_count <- nrow(p5_p6_fully_scored)
+dep_nonclinical_percentage <- (dep_nonclinical_count / dep_total_count) * 100
+
+# Print the results
+print(paste("Number of non-clinical cases:", dep_nonclinical_count))
+print(paste("Percentage of non-clinical cases:", round(dep_nonclinical_percentage, 2), "%"))
 ```
 
 ###Set rankings for Peru 5 and Peru 6
 ```{r}
 p5_p6_fully_scored <- p5_p6_fully_scored %>%
   mutate(
-    depression_rank_p5 = ifelse(wave == "Peru 5", clinical_status, NA),
-    depression_rank_p6 = ifelse(wave == "Peru 6", clinical_status, NA)
+    depression_rank_p5 = ifelse(wave == "Peru 5", dep_clinical_status, NA),
+    depression_rank_p6 = ifelse(wave == "Peru 6", dep_clinical_status, NA)
   )
 ```
 
