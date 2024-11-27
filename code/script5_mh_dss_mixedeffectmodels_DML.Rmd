@@ -68,16 +68,17 @@ HYPOTHESIS: Baseline mental health vulnerabilities (anxiety, depression) at Time
 
 #Anxiety at Time 2 predicting DSS total average.
 ###Model 1 NOTE: may need to change lmer to clmm to account for the ordinal and positive skew of the DSS data by running ordinal mixed-effect models.
+#start with wave -- how does ds increase regardless of MH
 ```{r}
-model1 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+model1_wave <- lmer(dss_total_avg ~ wave + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
 
 #Model summary
-summary(model1) #non-clinical had lower DSS
+summary(model1_wave) 
 ```
 
 ###Model 2
 ```{r}
-model2 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + wave + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+model2 <- lmer(dss_total_avg ~ wave + gender +  (1 | Peru3_4_5_6_ID), data = peru5_6_data)
 
 #Model summary
 summary(model2) #DSS lower at time 2
@@ -85,27 +86,50 @@ summary(model2) #DSS lower at time 2
 
 ###Model 3
 ```{r}
-model3 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + wave + gender + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+model3 <- lmer(dss_total_avg ~ wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
 
 #Model summary
 summary(model3) #DSS lower at time 2 
 ```
 
-###Model 4
+
+###Model 4.1
 ```{r}
-model4 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+model4_1 <- lmer(dss_total_avg ~ wave * gender + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
 
 #Model summary
-summary(model4) #DSS higher for older adolescents
+summary(model4_1) #No interaction: effect of Time 2 on DSS is similar for clinical & non-clinical anxiety 
 ```
 
-###Model 5
+###Model 4.2 (can't compare with 4.1)
+```{r}
+model4_2 <- lmer(dss_total_avg ~ wave * grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model4_2) #No interaction: effect of Time 2 on DSS is similar for clinical & non-clinical anxiety 
+```
+
+###Model 4.3 (compare with model 3)
+```{r}
+model4_3 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 + wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
+
+#Model summary
+summary(model4_3) #DSS higher for older adolescents
+```
+
+###Model 5 -- last model (compare with 4.3)
 ```{r}
 model5 <- lmer(dss_total_avg ~ anx_clinical_status_invariant_p5 * wave + gender + grade_2021 + (1 | Peru3_4_5_6_ID), data = peru5_6_data)
 
 #Model summary
 summary(model5) #No interaction: effect of Time 2 on DSS is similar for clinical & non-clinical anxiety 
 ```
+
+#ANOVA -- 
+```{r}
+
+```
+
 
 ###Model 6
 ```{r}
