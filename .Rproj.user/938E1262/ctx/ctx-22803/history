@@ -1,0 +1,16 @@
+knitr::opts_chunk$set(echo = TRUE)
+#Load in packages that will be used throughout the markdown.
+packages <- c("tidyverse",
+"summarytools",
+"psych",
+"reader",
+"tidyr",
+"lme4",
+"lmerTest",
+"jtools",
+"interactions",
+"rio",
+"ggplot2",
+"dplyr",
+"here")
+invisible(lapply(packages, install.packages, character.only = TRUE)) #install packages (only run once)

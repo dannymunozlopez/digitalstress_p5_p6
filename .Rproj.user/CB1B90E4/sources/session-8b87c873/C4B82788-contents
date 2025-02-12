@@ -1,0 +1,251 @@
+---
+title: "Age & Sex Models"
+author: "Daniela Munoz Lopez"
+date: "2024-10-22"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#clear environment (RUN EACH TIME SCRIPT IS OPENED)
+rm(list = ls()) 
+```
+
+#Load Packages
+```{r}
+#Load in packages that will be used throughout the markdown.
+packages <- c("tidyverse",
+                "summarytools",
+                "psych",
+                "reader",
+                "tidyr",
+                "lme4",
+                "lmerTest",
+                "jtools",
+                "interactions",
+                "rio",
+                "ggplot2",
+                "dplyr",
+                "here",
+                "emmeans")
+#invisible(lapply(packages, install.packages, character.only = TRUE)) #install packages (only run once)
+invisible(lapply(packages, library, character.only = TRUE)) #load the packages
+```
+
+#Load data
+```{r}
+#load data.
+data_dir = here() #Move to the digitalstress_p5_p6 folder (project folder)
+
+data_folder <- "data" #Name of the folder containing the preprocessed data
+
+data_folder_path <- file.path(data_dir, data_folder) #Path to the data within data folder
+
+file_name <- "p5_p6_dss_promis_fully_scored.csv" #Name of the preprocessed data that was created in script1_datacleaning_DML
+
+peru5_6_data <- read.csv(here(data_folder_path,file_name), header = T, sep = ",", na.strings=c("", " ","NA")) #Load data
+
+nrow(peru5_6_data) #N = 973 -- ok: does match N in script 1
+
+#check data
+head(peru5_6_data, 20)
+tail(peru5_6_data, 20)
+```
+
+#Recode wave to timepoint 
+```{r}
+peru5_6_data <- peru5_6_data %>% 
+     dplyr::mutate_at(c('wave'), 
+               funs(dplyr::recode(., "Peru 5"='Time 1',
+                                     "Peru 6"='Time 2')))
+```
+#Linear models 
+##DSS Subscales
+```{r}
+avail_stress_gen_grade_lm <- lmer(avail_stress ~ wave * gender + (1 | Peru3_4_5_6_ID ), peru5_6_data)
+approv_anx_gen_grade_lm <- lmer(approval_anx ~ wave * gender + (1 | Peru3_4_5_6_ID ), peru5_6_data)
+fomo_gen_grade_lm <- lmer(fomo ~ wave * gender + (1 | Peru3_4_5_6_ID ), peru5_6_data)
+online_vigil_gen_grade_lm <- lmer(online_vigil ~ wave * gender + (1 | Peru3_4_5_6_ID ), peru5_6_data)
+connect_over_gen_grade_lm <- lmer(connect_overload ~ wave * gender + (1 | Peru3_4_5_6_ID ), peru5_6_data)
+```
+
+###Emmeans of models
+```{r}
+lsm_plot_availability <- summary(emmeans(avail_stress_gen_grade_lm, ~wave|gender))
+lsm_plot_availability$task<- "Availability Stress"
+
+lsm_plot_approval<- summary(emmeans(approv_anx_gen_grade_lm, ~wave|gender))
+lsm_plot_approval$task<- "Approval Anxiety"
+
+lsm_plot_fomo <- summary(emmeans(fomo_gen_grade_lm, ~wave|gender))
+lsm_plot_fomo$task<-"FOMO"
+
+lsm_plot_vigilance <- summary(emmeans(online_vigil_gen_grade_lm, ~wave|gender))
+lsm_plot_vigilance$task<- "Online Vigilance"
+
+lsm_plot_connection <- summary(emmeans(connect_over_gen_grade_lm, ~wave|gender))
+lsm_plot_connection$task<-"Connection Overload"
+```
+
+###Merge models into one
+```{r}
+lsm_plots_df <- rbind(lsm_plot_availability, lsm_plot_approval, lsm_plot_fomo, lsm_plot_vigilance, lsm_plot_connection)
+```
+
+###Plot models
+```{r}
+pd <- position_dodge(width = 0.1)
+age_gender_plot <- ggplot(data=rbind(lsm_plot_availability, lsm_plot_approval, lsm_plot_fomo, lsm_plot_vigilance, lsm_plot_connection), aes(y = emmean, ymax = emmean+SE, ymin = emmean- SE, x = wave, group = interaction(task, gender), color = gender))
+age_gender_plot <- age_gender_plot + geom_line(position=pd, size = 1) + geom_point(size=I(2), position=pd)+ geom_errorbar(width=0.3, position=pd)
+age_gender_plot <- age_gender_plot + theme_bw() + xlab("Timepoint") 
+age_gender_plot <- age_gender_plot + scale_y_continuous(limit = c(1,5), breaks=seq(1,5), name = "Digital Stress Score")
+age_gender_plot <- age_gender_plot + theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+    ,axis.text=element_text(size=10)
+    ,axis.title=element_text(size=16,face="bold")
+    ,legend.text=element_text(size=11)
+    ,legend.justification = c(.50, .05), legend.position = c(.10, .73)
+    ,legend.background = element_rect(fill=NULL)
+  )
+age_gender_plot <- age_gender_plot + guides(colour = guide_legend(override.aes=list(size=1)))
+age_gender_plot <- age_gender_plot + labs(color = "Sex")
+age_gender_plot <- age_gender_plot + labs(caption = sprintf("N= %s", nrow(peru5_6_data))) #add degrees of freedom to plot
+age_gender_plot_confirm <- age_gender_plot + facet_grid(. ~ task) + labs(title = "Digital Stress Across Time Points")
+age_gender_plot_confirm
+```
+
+###Save plot
+```{r}
+file.name = (here("output","dss_wave_gender_interactions.tff")) #Setting the save location and file name
+ggsave(file.name,plot = last_plot(), dpi = 300, device = "tiff") #Save the plot
+```
+
+##PROMIS Anxiety
+```{r}
+avail_stress_gen_grade_lm <- lm(avail_stress ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+approv_anx_gen_grade_lm <- lm(approval_anx ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+fomo_gen_grade_lm <- lm(fomo ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+online_vigil_gen_grade_lm <- lm(online_vigil ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+connect_over_gen_grade_lm <- lm(connect_overload ~ wave + anx_clinical_status_invariant_p5, peru5_6_data)
+```
+
+##Emmeans
+```{r}
+lsm_plot_availability <- summary(emmeans(avail_stress_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
+lsm_plot_availability$task<- "Availability Stress"
+
+lsm_plot_approval <- summary(emmeans(approv_anx_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
+lsm_plot_approval$task<- "Approval Anxiety"
+
+lsm_plot_fomo <- summary(emmeans(fomo_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
+lsm_plot_fomo$task<-"FOMO"
+
+lsm_plot_vigilance <- summary(emmeans(online_vigil_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
+lsm_plot_vigilance$task<- "Online Vigilance"
+
+lsm_plot_connection <- summary(emmeans(connect_over_gen_grade_lm, ~wave|anx_clinical_status_invariant_p5))
+lsm_plot_connection$task<-"Connection Overload"
+
+```
+
+##Combine models
+```{r}
+lsm_plot_confirm_df <- rbind(lsm_plot_availability, lsm_plot_approval, lsm_plot_fomo, lsm_plot_vigilance, lsm_plot_connection) #combine all plots into one table
+```
+
+##Plot
+```{r}
+pd <- position_dodge(width = 0.1)
+age_gender_plot <- ggplot(data=rbind(lsm_plot_availability, lsm_plot_approval, lsm_plot_fomo, lsm_plot_vigilance, lsm_plot_connection), aes(y = emmean, ymax = emmean+SE, ymin = emmean- SE, x = wave, group = interaction(task, anx_clinical_status_invariant_p5), color = anx_clinical_status_invariant_p5))
+age_gender_plot <- age_gender_plot + geom_line(position=pd, size = 1) + geom_point(size=I(2), position=pd)+ geom_errorbar(width=0.3, position=pd)
+age_gender_plot <- age_gender_plot + theme_bw() + xlab("Time Point") 
+age_gender_plot <- age_gender_plot + scale_y_continuous(limit = c(1,5), breaks=seq(1,5), name = "Digital Stress Score")
+age_gender_plot <- age_gender_plot + theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+    ,axis.text=element_text(size=10)
+    ,axis.title=element_text(size=16,face="bold")
+    ,legend.text=element_text(size=11)
+    ,legend.justification = c(.90, .05), legend.position = c(.17, .70)
+    ,legend.background = element_rect(fill=NULL)
+  )
+age_gender_plot <- age_gender_plot + guides(colour = guide_legend(override.aes=list(size=1)))
+age_gender_plot <- age_gender_plot + labs(color = "Anxiety")
+age_gender_plot <- age_gender_plot + labs(caption = sprintf("DF: %s", lsm_plot_confirm_df$df)) #add degrees of freedom to plot
+age_gender_plot_confirm <- age_gender_plot + facet_grid(. ~ task) + labs(title = "Digital Stress & Anxiety Across Time Points")
+age_gender_plot_confirm
+```
+
+##Save plot
+```{r}
+file.name = (here("output","dss_promis_anx_grade_waves.tff")) #Setting the save location and file name
+ggsave(file.name,plot = last_plot(), dpi = 300, device = "tiff") #Save the plot
+```
+
+##PROMIS Depression
+```{r}
+avail_stress_gen_grade_lm <- lm(avail_stress ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+approv_anx_gen_grade_lm <- lm(approval_anx ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+fomo_gen_grade_lm <- lm(fomo ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+online_vigil_gen_grade_lm <- lm(online_vigil ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+connect_over_gen_grade_lm <- lm(connect_overload ~ wave + dep_clinical_status_invariant_p5, peru5_6_data)
+```
+
+##Emmeans
+```{r}
+lsm_plot_availability <- summary(emmeans(avail_stress_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
+lsm_plot_availability$task<- "Availability Stress"
+
+lsm_plot_approval <- summary(emmeans(approv_anx_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
+lsm_plot_approval$task<- "Approval Anxiety"
+
+lsm_plot_fomo <- summary(emmeans(fomo_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
+lsm_plot_fomo$task<-"FOMO"
+
+lsm_plot_vigilance <- summary(emmeans(online_vigil_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
+lsm_plot_vigilance$task<- "Online Vigilance"
+
+lsm_plot_connection <- summary(emmeans(connect_over_gen_grade_lm, ~wave|dep_clinical_status_invariant_p5))
+lsm_plot_connection$task<-"Connection Overload"
+```
+
+##Combine models
+```{r}
+lsm_plot_confirm_df <- rbind(lsm_plot_approval, lsm_plot_availability, lsm_plot_fomo, lsm_plot_connection, lsm_plot_vigilance) #combine all plots into one table
+```
+
+##Create plot
+```{r}
+pd <- position_dodge(width = 0.1)
+age_gender_plot <- ggplot(data=rbind(lsm_plot_approval, lsm_plot_availability, lsm_plot_fomo, lsm_plot_connection, lsm_plot_vigilance), aes(y = emmean, ymax = emmean+SE, ymin = emmean- SE, x = wave, group = interaction(task, dep_clinical_status_invariant_p5), color = dep_clinical_status_invariant_p5))
+age_gender_plot <- age_gender_plot + geom_line(position=pd, size = 1) + geom_point(size=I(2), position=pd)+ geom_errorbar(width=0.3, position=pd)
+age_gender_plot <- age_gender_plot + theme_bw() + xlab("Time Point") 
+age_gender_plot <- age_gender_plot + scale_y_continuous(limit = c(1,5), breaks=seq(1,5), name = "Digital Stress Score")
+age_gender_plot <- age_gender_plot + theme(
+    plot.background = element_blank()
+    ,panel.grid.major = element_blank()
+    ,panel.grid.minor = element_blank()
+    ,axis.text=element_text(size=10)
+    ,axis.title=element_text(size=16,face="bold")
+    ,legend.text=element_text(size=11)
+    ,legend.justification = c(.90, .05), legend.position = c(.17, .70)
+    ,legend.background = element_rect(fill=NULL)
+  )
+age_gender_plot <- age_gender_plot + guides(colour = guide_legend(override.aes=list(size=1)))
+age_gender_plot <- age_gender_plot + labs(color = "Depression")
+age_gender_plot <- age_gender_plot + labs(caption = sprintf("DF: %s", lsm_plot_confirm_df$df)) #add degrees of freedom to plot
+age_gender_plot_confirm <- age_gender_plot + facet_grid(. ~ task) + labs(title = "Digital Stress & Depression Across Time Point")
+age_gender_plot_confirm
+```
+
+##Save plot
+```{r}
+file.name = (here("output","dss_promis_dep_grade_waves.tff")) #Setting the save location and file name
+ggsave(file.name,plot = last_plot(), dpi = 300, device = "tiff") #Save the plot
+```
