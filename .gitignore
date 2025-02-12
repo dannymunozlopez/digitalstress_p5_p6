@@ -1,0 +1,16 @@
+# R project files
+.Rproj.user/
+.Rhistory
+.RData
+
+# Ignore .csv files
+*.csv
+
+# Ignore other system files
+.DS_Store
+
+# Ignore Quarto
+.quarto/
+
+# Others to ignore 
+.httr-oauth
