@@ -1,0 +1,24 @@
+"0","#Re-code sex for future analyse"
+"0","peru5_6_group_session <- peru5_6_group_session %>%"
+"0","  dplyr::mutate_at(c('gender'),"
+"0","  funs(dplyr::recode(., ""M""='Male', ""F""='Female')))"
+"2","Warning: `funs()` was deprecated in dplyr 0.8.0.
+Please use a list of either functions or lambdas: 
+
+  # Simple named list: 
+  list(mean = mean, median = median)
+
+  # Auto named with `tibble::lst()`: 
+  tibble::lst(mean, median)
+
+  # Using lambdas
+  list(~ mean(., trim = .2), ~ median(., na.rm = TRUE))"
+"0","#Make into a factor"
+"0","peru5_6_group_session$gender <- as.factor(peru5_6_group_session$gender)"
+"0",""
+"0","#Check type (should be factor/integer)"
+"0","typeof(peru5_6_group_session$gender) #now an integer"
+"1","[1]"
+"1"," ""integer"""
+"1","
+"

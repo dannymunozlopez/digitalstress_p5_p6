@@ -1,0 +1,2 @@
+"0","proj_data_dir = here() #Stay in the ""digitalstress_p5_p6"" folder"
+"0","project_data_folder <- file.path(proj_data_dir, ""data"") #Path to the data folder for this project"

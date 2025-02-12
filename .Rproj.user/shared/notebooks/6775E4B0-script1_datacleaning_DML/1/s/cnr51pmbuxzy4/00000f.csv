@@ -1,0 +1,2 @@
+"0","#clear environment (RUN EACH TIME SCRIPT IS OPENED)"
+"0","rm(list = ls())"
