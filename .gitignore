@@ -1,5 +1,22 @@
-.httr-oauth
+# R project files
+.Rproj.user/
+.Rhistory
+.RData
+
+# Ignore .csv files
+*.csv
+
+# Ignore other system files
 .DS_Store
+<<<<<<< HEAD
 .quarto
 .csv
 .Rproj.user
+=======
+
+# Ignore Quarto
+.quarto/
+
+# Others to ignore 
+.httr-oauth
+>>>>>>> 6d95fcfc104e36952ca413b3862796970498a5c3
