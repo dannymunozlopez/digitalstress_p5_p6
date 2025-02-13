@@ -460,7 +460,7 @@ mean(p5_p6_alldss_promisanx_scored$promis_anx_sum) #10.86536
 sd(p5_p6_alldss_promisanx_scored$promis_anx_sum) #3.81347
 ```
 
-###Converting raw PROMIS Anxiety sum scores to t-sores
+###Converting raw PROMIS Anxiety sum scores to t-sores (now continuous data due to t-score)
 ```{r}
 #Recode scores according to T-Score table
 p5_p6_alldss_promisanx_scored <- p5_p6_alldss_promisanx_scored %>%
@@ -506,7 +506,7 @@ mean(p5_p6_fully_scored$promis_dep_sum) #20.42549
 sd(p5_p6_fully_scored$promis_dep_sum) #8.362778
 ```
 
-###Converting raw PROMIS Depression sum scores to t-sores
+###Converting raw PROMIS Depression sum scores to t-sores (now continuous data due to t-score)
 ```{r}
 #Recode scores according to T-Score table
 p5_p6_fully_scored <- p5_p6_fully_scored %>%

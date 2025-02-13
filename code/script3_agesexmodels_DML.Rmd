@@ -63,6 +63,15 @@ peru5_6_data <- peru5_6_data %>%
                                      "Peru 6"='Time 2')))
 ```
 #Linear models 
+##Notes on linear models
+```{r}
+#Using lmer function: fits linear mixed-effects models to data via REML (default estimation method in function) -- multilevel/hierarchical model
+#LMER: to analyze data with repeated observations.
+#EMMEANS:
+#Interactions with wave * sex for DSS subscales: 
+#DSS Subscale wtih wave + anxiety/dep ranking at T1: 
+```
+
 ##DSS Subscales
 ```{r}
 avail_stress_gen_grade_lm <- lmer(avail_stress ~ wave * gender + (1 | Peru3_4_5_6_ID ), peru5_6_data)
