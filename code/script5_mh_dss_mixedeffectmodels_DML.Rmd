@@ -173,6 +173,7 @@ summary(model8) #No interaction: effect of wave and gender on DSS is similar for
 ```
 
 ##Compare models with ANOVA
+#I DON'T THINK I CAN COMPARE MODELS WITH ANOVA IF I AM USING REML!! == REML = ACCOUNTS FOR VARIANCE AND COVARIANCE PARAMETERS AFTER ACCOUNTING FOR FIXED EFFECTS (FIXED EFFECTS NOT TAKEN INTO ACCOUNT FOR MODEL LIKELIHOOD). This means that REML is focusing first on the variation explained by random effects and residual variance, meaning that the fixed effects are not taken into account.REML is more reliable since it is using unbiased variance components to estimate the fixed effects = unbiased estimates of variance & covariance
 ```{r}
 anova(model1, model2) #model 2
 anova(model2, model3) #model 2

@@ -66,7 +66,9 @@ peru5_6_data <- peru5_6_data %>%
 ##Notes on linear models
 ```{r}
 #Using lmer function: fits linear mixed-effects models to data via REML (default estimation method in function) -- multilevel/hierarchical model
+#Mixed-effects models: 
 #LMER: to analyze data with repeated observations.
+#REML: Used to produce unbiased estimates of variance & covariance parameters (unbiased for random effects). Unbiased estimates of parameters = coefficients are equal to the true population parameters (on average)
 #EMMEANS:
 #Interactions with wave * sex for DSS subscales: 
 #DSS Subscale wtih wave + anxiety/dep ranking at T1: 
